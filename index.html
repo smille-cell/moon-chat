@@ -2,95 +2,154 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Moon Messenger</title>
     <style>
-        :root { --bg: #0b0e14; --accent: #38bdf8; --glass: rgba(255,255,255,0.05); }
+        :root { --bg: #0b0e14; --accent: #38bdf8; --glass: rgba(255,255,255,0.05); --text: #f1f5f9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100dvh; display: flex; overflow: hidden; }
+        
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; height: 100dvh; display: flex; overflow: hidden; }
 
         /* ИНТРО */
         #intro-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.8s ease; }
-        .intro-slide { display: none; text-align: center; animation: fadeIn 1s; }
+        .intro-slide { display: none; text-align: center; animation: fadeIn 0.8s; }
         .intro-slide.active { display: block; }
-        .intro-icon { font-size: 60px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--accent)); }
-        .intro-title { color: var(--accent); font-size: 24px; margin-bottom: 10px; font-weight: bold; }
+        .intro-icon { font-size: 70px; margin-bottom: 20px; filter: drop-shadow(0 0 15px var(--accent)); }
+        .intro-title { color: var(--accent); font-size: 26px; font-weight: 800; margin-bottom: 10px; }
+        .intro-text { opacity: 0.6; font-size: 16px; line-height: 1.5; max-width: 260px; }
         
-        #start-btn { margin-top: 30px; padding: 12px 40px; border-radius: 25px; border: none; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; display: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-main { margin-top: 30px; padding: 16px 50px; border-radius: 30px; border: none; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .btn-secondary { margin-top: 15px; background: transparent; color: var(--accent); border: 1px solid var(--accent); padding: 12px 30px; border-radius: 30px; cursor: pointer; font-weight: bold; }
 
-        /* ВХОД */
-        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; align-items: center; justify-content: center; }
-        .auth-box { background: #1e293b; padding: 30px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid var(--accent); }
-        input { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px; outline: none; }
-        button { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-        /* ЧАТ */
-        #sidebar { width: 300px; border-right: 1px solid var(--glass); display: none; flex-direction: column; background: #0f172a; }
+        /* ЭКРАН ВХОДА */
+        #auth-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; align-items: center; justify-content: center; flex-direction: column; }
+        .auth-box { width: 90%; max-width: 340px; text-align: center; }
+        .auth-box h2 { font-size: 28px; margin-bottom: 25px; color: var(--accent); }
+        input { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 16px; border-radius: 14px; width: 100%; margin-bottom: 12px; outline: none; font-size: 16px; }
+        input:focus { border-color: var(--accent); }
+
+        /* ИНТЕРФЕЙС ЧАТА */
+        #sidebar { width: 320px; border-right: 1px solid var(--glass); display: none; flex-direction: column; background: #0f172a; flex-shrink: 0; }
+        #search { margin: 15px; padding: 12px; border-radius: 10px; background: #1e293b; border: none; color: white; width: calc(100% - 30px); }
+        
+        .contact { padding: 15px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.2s; }
+        .contact:hover { background: var(--glass); }
+        .contact.active { background: rgba(56, 189, 248, 0.1); border-left: 4px solid var(--accent); }
+
         #chat-main { flex: 1; display: none; flex-direction: column; background: #0b0e14; position: relative; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; list-style: none; margin: 0; }
-        .msg { padding: 10px 14px; border-radius: 15px; max-width: 75%; }
-        .msg.me { align-self: flex-end; background: #0369a1; }
-        .msg.other { align-self: flex-start; background: #334155; }
-        .input-area { padding: 15px; display: flex; gap: 10px; background: #1e293b; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; list-style: none; margin: 0; }
+        
+        .msg { padding: 10px 16px; border-radius: 18px; max-width: 75%; font-size: 15px; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .msg.me { align-self: flex-end; background: #007aff; color: white; border-bottom-right-radius: 4px; }
+        .msg.other { align-self: flex-start; background: #26262b; color: white; border-bottom-left-radius: 4px; }
+
+        .input-area { padding: 15px 15px 30px 15px; display: flex; gap: 10px; background: #1e293b; border-top: 1px solid var(--glass); }
+        .input-area input { margin-bottom: 0; flex: 1; border-radius: 25px; padding: 12px 20px; }
+        .input-area button { background: var(--accent); border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 18px; flex-shrink: 0; }
+
+        @media (max-width: 600px) {
+            #sidebar { width: 100%; }
+            #chat-main { display: none; position: fixed; inset: 0; z-index: 100; }
+            #chat-main.open { display: flex; }
+        }
     </style>
 </head>
 <body>
 
 <div id="intro-overlay">
-    <div class="intro-slide active" id="slide1"><div class="intro-icon">🛡️</div><div class="intro-title">Конфиденциальность</div></div>
-    <div class="intro-slide" id="slide2"><div class="intro-icon">🔐</div><div class="intro-title">Moon Shield</div></div>
-    <div class="intro-slide" id="slide3"><div class="intro-icon">🌕</div><div class="intro-title">Moon Messenger</div></div>
-    <button id="start-btn" onclick="goToAuth()">НАЧАТЬ</button>
+    <div class="intro-slide active" id="s1">
+        <div class="intro-icon">🛡️</div>
+        <div class="intro-title">Конфиденциально</div>
+        <div class="intro-text">Moon не хранит ваши переписки на серверах навсегда.</div>
+    </div>
+    <div class="intro-slide" id="s2">
+        <div class="intro-icon">🚀</div>
+        <div class="intro-title">Мгновенно</div>
+        <div class="intro-text">Скорость передачи данных выше, чем у спутников.</div>
+    </div>
+    <div class="intro-slide" id="s3">
+        <div class="intro-icon">🌕</div>
+        <div class="intro-title">Moon Messenger</div>
+        <div class="intro-text">Присоединяйтесь к самому защищенному сообществу.</div>
+    </div>
+    
+    <div id="intro-buttons" style="display:none; flex-direction: column; align-items: center;">
+        <button class="btn-main" onclick="openAuth(true)">СОЗДАТЬ АККАУНТ</button>
+        <button class="btn-secondary" onclick="openAuth(false)">УЖЕ БЫЛИ С НАМИ? ВОЙТИ</button>
+    </div>
 </div>
 
 <div id="auth-screen">
     <div class="auth-box">
-        <h2 id="atitle" style="color: var(--accent)">ВХОД</h2>
-        <input id="u" placeholder="Логин">
+        <h2 id="auth-header">ВХОД</h2>
+        <input id="u" placeholder="Логин" autocomplete="off">
         <input id="p" type="password" placeholder="Пароль">
-        <button id="abtn" onclick="sendAuth()">ВОЙТИ</button>
-        <p id="amode" onclick="switchMode()" style="font-size:12px; color:var(--accent); cursor:pointer; margin-top:15px;">Нет аккаунта? Регистрация</p>
+        <button class="btn-main" style="width:100%" onclick="submitAuth()">ПРОДОЛЖИТЬ</button>
+        <p onclick="toggleAuth()" id="auth-hint" style="color:var(--accent); cursor:pointer; margin-top:20px; font-size:14px;">Создать новый аккаунт</p>
     </div>
 </div>
 
 <div id="sidebar">
-    <div style="padding:15px; border-bottom:1px solid var(--glass)">Онлайн</div>
+    <input id="user-search" placeholder="🔍 Поиск людей..." oninput="searchUsers()">
     <div id="user-list"></div>
 </div>
+
 <div id="chat-main">
-    <div id="chat-header" style="padding:15px; background:#1e293b;"><span id="chat-with">Выберите чат</span></div>
+    <div style="padding:15px; background:#1e293b; border-bottom:1px solid var(--glass); display:flex; align-items:center;">
+        <button onclick="closeChat()" id="back-btn" style="background:none; border:none; color:var(--accent); font-size:20px; margin-right:15px; display:none;">←</button>
+        <b id="active-user-name">Выберите чат</b>
+    </div>
     <ul id="messages"></ul>
-    <div class="input-area"><input id="m" placeholder="Сообщение..."><button onclick="send()">➤</button></div>
+    <div class="input-area" id="input-zone" style="display:none">
+        <input id="m" placeholder="Сообщение..." autocomplete="off">
+        <button onclick="send()">➤</button>
+    </div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
     const socket = io();
-    let isReg = false;
-    let myName = "", targetId = "";
+    let isRegMode = false, myName = "", targetId = "", allUsers = {};
 
-    // Слайды
-    let curS = 1;
-    const sInt = setInterval(() => {
-        document.getElementById(`slide${curS}`).classList.remove('active');
-        curS++;
-        if(curS > 3) { clearInterval(sInt); document.getElementById('slide3').classList.add('active'); document.getElementById('start-btn').style.display='block'; }
-        else document.getElementById(`slide${curS}`).classList.add('active');
+    // Анимация слайдов
+    let step = 1;
+    const interval = setInterval(() => {
+        document.getElementById(`s${step}`).classList.remove('active');
+        step++;
+        if(step > 3) {
+            clearInterval(interval);
+            document.getElementById('s3').classList.add('active');
+            document.getElementById('intro-buttons').style.display = 'flex';
+        } else {
+            document.getElementById(`s${step}`).classList.add('active');
+        }
     }, 2000);
 
-    function goToAuth() { document.getElementById('intro-overlay').remove(); document.getElementById('auth-screen').style.display='flex'; }
-    
-    function switchMode() {
-        isReg = !isReg;
-        document.getElementById('atitle').innerText = isReg ? "РЕГИСТРАЦИЯ" : "ВХОД";
-        document.getElementById('abtn').innerText = isReg ? "СОЗДАТЬ" : "ВОЙТИ";
-        document.getElementById('amode').innerText = isReg ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Регистрация";
+    function openAuth(reg) {
+        isRegMode = reg;
+        updateAuthUI();
+        document.getElementById('intro-overlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('intro-overlay').remove();
+            document.getElementById('auth-screen').style.display = 'flex';
+        }, 500);
     }
 
-    function sendAuth() {
+    function toggleAuth() {
+        isRegMode = !isRegMode;
+        updateAuthUI();
+    }
+
+    function updateAuthUI() {
+        document.getElementById('auth-header').innerText = isRegMode ? "РЕГИСТРАЦИЯ" : "ВХОД";
+        document.getElementById('auth-hint').innerText = isRegMode ? "Уже есть аккаунт? Войти" : "Создать новый аккаунт";
+    }
+
+    function submitAuth() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
-        if(u && p) socket.emit('auth', { username: u, password: p, isReg: isReg });
+        if(u && p) socket.emit('auth', { username: u, password: p, isReg: isRegMode });
     }
 
     socket.on('auth success', n => {
@@ -103,19 +162,48 @@
 
     socket.on('auth error', m => alert(m));
 
-    socket.on('user list', u => {
-        const list = document.getElementById('user-list'); list.innerHTML = '';
-        for(let id in u) if(u[id] !== myName) {
-            const d = document.createElement('div');
-            d.style.padding = '15px'; d.style.cursor = 'pointer'; d.innerText = u[id];
-            d.onclick = () => { targetId = id; document.getElementById('chat-with').innerText = u[id]; document.getElementById('messages').innerHTML = ''; };
-            list.appendChild(d);
+    socket.on('user list', u => { allUsers = u; searchUsers(); });
+
+    function searchUsers() {
+        const query = document.getElementById('user-search').value.toLowerCase();
+        const list = document.getElementById('user-list');
+        list.innerHTML = '';
+        
+        if(!query) {
+            list.innerHTML = '<p style="text-align:center; opacity:0.4; font-size:13px; margin-top:20px;">Начните вводить имя друга...</p>';
+            return;
         }
-    });
+
+        for(let id in allUsers) {
+            if(allUsers[id] !== myName && allUsers[id].toLowerCase().includes(query)) {
+                const d = document.createElement('div');
+                d.className = `contact ${id === targetId ? 'active' : ''}`;
+                d.innerHTML = `<div style="width:40px;height:40px;background:var(--accent);border-radius:50%;margin-right:12px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:bold">${allUsers[id][0].toUpperCase()}</div><b>${allUsers[id]}</b>`;
+                d.onclick = () => selectContact(id, allUsers[id]);
+                list.appendChild(d);
+            }
+        }
+    }
+
+    function selectContact(id, name) {
+        targetId = id;
+        document.getElementById('active-user-name').innerText = name;
+        document.getElementById('messages').innerHTML = '';
+        document.getElementById('input-zone').style.display = 'flex';
+        if(window.innerWidth < 600) {
+            document.getElementById('chat-main').classList.add('open');
+            document.getElementById('back-btn').style.display = 'block';
+        }
+    }
+
+    function closeChat() { document.getElementById('chat-main').classList.remove('open'); }
 
     function send() {
         const i = document.getElementById('m');
-        if(i.value && targetId) { socket.emit('private message', { toId: targetId, text: i.value }); i.value = ''; }
+        if(i.value && targetId) {
+            socket.emit('private message', { toId: targetId, text: i.value });
+            i.value = '';
+        }
     }
 
     socket.on('private message', d => {
@@ -124,8 +212,11 @@
             li.className = `msg ${d.isSelf ? 'me' : 'other'}`;
             li.innerText = d.text;
             document.getElementById('messages').appendChild(li);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
     });
+
+    document.getElementById('m').addEventListener('keypress', e => { if(e.key === 'Enter') send(); });
 </script>
 </body>
 </html>
