@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Moon Chat Pro 🚀</title>
+    <style>
+        :root { --bg: #0b0e14; --glass: rgba(255, 255, 255, 0.05); --accent: #64ffda; --text: #e2e8f0; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; overflow: hidden; }
+
+        /* Экран входа */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #1e293b 0%, #0b0e14 100%);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .login-box { background: var(--glass); padding: 40px; border-radius: 20px; border: 1px solid var(--accent); text-align: center; backdrop-filter: blur(10px); }
+        .login-box input { background: rgba(0,0,0,0.3); border: 1px solid var(--accent); color: white; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 20px; width: 200px; text-align: center; }
+
+        /* Боковая панель */
+        #sidebar { width: 260px; background: rgba(0,0,0,0.4); border-right: 1px solid var(--glass); padding: 20px; display: flex; flex-direction: column; }
+        .user-item { padding: 12px; margin: 5px 0; background: var(--glass); border-radius: 10px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .user-item:hover { border-color: var(--accent); background: rgba(100, 255, 218, 0.1); }
+
+        /* Основной чат */
+        #chat-area { flex: 1; display: flex; flex-direction: column; }
+        #messages { flex: 1; overflow-y: auto; padding: 25px; list-style: none; margin: 0; }
+        .msg { background: var(--glass); padding: 12px 18px; border-radius: 15px; margin-bottom: 12px; max-width: 80%; border-left: 4px solid var(--accent); animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Поле ввода */
+        .input-area { padding: 20px; display: flex; gap: 12px; background: rgba(0,0,0,0.3); }
+        input { flex: 1; background: var(--glass); border: 1px solid var(--glass); color: white; padding: 14px; border-radius: 12px; outline: none; }
+        button { background: var(--accent); color: #000; border: none; padding: 0 25px; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { opacity: 0.8; transform: scale(1.05); }
+
+        /* Окно ЛС */
+        #private-window { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 450px; height: 350px; background: #161b22; border: 1px solid var(--accent);
+            border-radius: 20px; flex-direction: column; z-index: 100; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        #pm-header { padding: 15px 20px; background: var(--accent); color: black; font-weight: bold; border-radius: 19px 19px 0 0; display: flex; justify-content: space-between; }
+        #pm-messages { flex: 1; overflow-y: auto; padding: 15px; font-size: 14px; border-bottom: 1px solid var(--glass); }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <div class="login-box">
+        <h1 style="color: var(--accent); margin-top: 0;">MOON CHAT</h1>
+        <p>Введите ваш позывной</p>
+        <input id="nickname-input" placeholder="Nickname..." maxlength="15">
+        <br>
+        <button onclick="startChat()">ВОЙТИ</button>
+    </div>
+</div>
+
+<div id="sidebar">
+    <h3 style="color: var(--accent);">Орбита (Online)</h3>
+    <div id="user-list"></div>
+</div>
+
+<div id="chat-area">
+    <ul id="messages"></ul>
+    <div class="input-area">
+        <input id="m" placeholder="Написать в общий канал..." autocomplete="off">
+        <button onclick="sendGeneral()">ОТПРАВИТЬ</button>
+    </div>
+</div>
+
+<div id="private-window">
+    <div id="pm-header"><span id="target-name">Личный канал</span> <span onclick="closePM()" style="cursor:pointer">✖</span></div>
+    <div id="pm-messages"></div>
+    <div class="input-area" style="padding: 10px;">
+        <input id="pm-input" placeholder="Секретное сообщение...">
+        <button onclick="sendPrivate()">📩</button>
+    </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    let currentTargetId = null;
+    let myName = "";
+
+    function startChat() {
+        const input = document.getElementById('nickname-input');
+        if (input.value.trim().length > 1) {
+            myName = input.value;
+            document.getElementById('login-screen').style.display = 'none';
+            socket.emit('set nickname', myName);
+        }
+    }
+
+    // Обработка Enter для входа
+    document.getElementById('nickname-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') startChat(); });
+    document.getElementById('m').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendGeneral(); });
+    document.getElementById('pm-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendPrivate(); });
+
+    socket.on('user list', (users) => {
+        const list = document.getElementById('user-list');
+        list.innerHTML = '';
+        for (let id in users) {
+            if (id !== socket.id) {
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `🛰️ <b>${users[id]}</b>`;
+                div.onclick = () => openPM(id, users[id]);
+                list.appendChild(div);
+            }
+        }
+    });
+
+    function sendGeneral() {
+        const input = document.getElementById('m');
+        if (input.value) {
+            socket.emit('chat message', { text: input.value });
+            input.value = '';
+        }
+    }
+
+    socket.on('chat message', (msg) => {
+        const li = document.createElement('li');
+        li.className = 'msg';
+        li.innerHTML = `<b style="color:var(--accent); cursor:pointer" onclick="openPM('${msg.fromId}', '${msg.user}')">${msg.user}:</b> ${msg.text}`;
+        const msgList = document.getElementById('messages');
+        msgList.appendChild(li);
+        msgList.scrollTop = msgList.scrollHeight;
+    });
+
+    function openPM(id, name) {
+        if (!id || id === "undefined") return;
+        currentTargetId = id;
+        document.getElementById('target-name').innerText = "ЛС: " + name;
+        document.getElementById('private-window').style.display = 'flex';
+    }
+
+    function closePM() { document.getElementById('private-window').style.display = 'none'; }
+
+    function sendPrivate() {
+        const input = document.getElementById('pm-input');
+        if (input.value && currentTargetId) {
+            socket.emit('private message', { toId: currentTargetId, text: input.value });
+            input.value = '';
+        }
+    }
+
+    socket.on('private message', (data) => {
+        const p = document.createElement('p');
+        p.style.margin = "5px 0";
+        p.innerHTML = `<span style="color:var(--accent)">[${data.fromName}]</span>: ${data.text}`;
+        document.getElementById('pm-messages').appendChild(p);
+        document.getElementById('pm-messages').scrollTop = document.getElementById('pm-messages').scrollHeight;
+        document.getElementById('private-window').style.display = 'flex';
+    });
+</script>
+</body>
+</html>
