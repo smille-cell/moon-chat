@@ -1,55 +1,50 @@
 const express = require('express');
 const app = express();
-const http = require('http').Server(app);
+const http = require('http').createServer(app);
 const io = require('socket.io')(http);
-const path = require('path');
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// "База данных" в памяти (после перезагрузки сервера очистится)
+// Для вечного хранения нужен MongoDB, но для теста хватит и этого
+const usersDB = {}; 
+const onlineUsers = {}; 
 
-let users = {}; 
+app.use(express.static(__dirname));
 
 io.on('connection', (socket) => {
-  // Когда пользователь вводит имя
-  socket.on('set nickname', (name) => {
-    users[socket.id] = name;
-    io.emit('user list', users); 
-    console.log(`${name} вошел в чат`);
-  });
+    // РЕГИСТРАЦИЯ И ВХОД
+    socket.on('auth', (data) => {
+        const { username, password, isReg } = data;
 
-  // Общий чат
-  socket.on('chat message', (msg) => {
-    io.emit('chat message', { 
-        user: users[socket.id] || "Аноним", 
-        text: msg.text, 
-        fromId: socket.id 
+        if (isReg) {
+            if (usersDB[username]) {
+                return socket.emit('auth error', 'Этот ник уже занят!');
+            }
+            usersDB[username] = password;
+            socket.emit('auth success', username);
+        } else {
+            if (usersDB[username] === password) {
+                socket.emit('auth success', username);
+            } else {
+                return socket.emit('auth error', 'Неверный логин или пароль');
+            }
+        }
     });
-  });
 
-  // Личные сообщения
-  socket.on('private message', ({ toId, text }) => {
-    if (users[toId]) {
-      io.to(toId).emit('private message', {
-        fromId: socket.id,
-        fromName: users[socket.id],
-        text: text
-      });
-      socket.emit('private message', {
-        fromId: toId,
-        fromName: "Вы -> " + users[toId],
-        text: text
-      });
-    }
-  });
+    socket.on('set nickname', (name) => {
+        socket.nickname = name;
+        onlineUsers[socket.id] = name;
+        io.emit('user list', onlineUsers);
+    });
 
-  socket.on('disconnect', () => {
-    delete users[socket.id];
-    io.emit('user list', users);
-  });
+    socket.on('chat message', (msg) => {
+        io.emit('chat message', { user: socket.nickname, text: msg.text });
+    });
+
+    socket.on('disconnect', () => {
+        delete onlineUsers[socket.id];
+        io.emit('user list', onlineUsers);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
-  console.log('Moon Chat Pro запущен на порту: ' + PORT);
-});
+http.listen(PORT, () => console.log('Server is orbit! Port: ' + PORT));
