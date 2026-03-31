@@ -5,39 +5,48 @@ const io = require('socket.io')(http, { cors: { origin: "*" } });
 
 app.use(express.static(__dirname));
 
-let users = {}; 
+const usersDB = {}; 
+const onlineUsers = {}; 
 
 io.on('connection', (socket) => {
-    console.log('Подключено:', socket.id);
-
     socket.on('auth', (data) => {
-        socket.nickname = data.username;
-        users[socket.id] = data.username;
-        socket.emit('auth success', data.username);
-        io.emit('user list', users); // Обновляем список у всех
+        const { username, password, isReg } = data;
+        if (isReg) {
+            if (usersDB[username]) return socket.emit('auth error', 'Ник занят');
+            usersDB[username] = password;
+            socket.emit('auth success', username);
+        } else {
+            if (usersDB[username] === password) socket.emit('auth success', username);
+            else socket.emit('auth error', 'Ошибка входа');
+        }
+    });
+
+    socket.on('set nickname', (name) => {
+        socket.nickname = name;
+        onlineUsers[socket.id] = name;
+        io.emit('user list', onlineUsers);
     });
 
     socket.on('private message', (data) => {
-        // Отправка получателю
-        io.to(data.toId).emit('private message', { 
-            fromId: socket.id, 
-            fromName: socket.nickname, 
-            text: data.text 
+        // Отправка собеседнику
+        io.to(data.toId).emit('private message', {
+            fromId: socket.id,
+            text: data.text,
+            isSelf: false
         });
-        // Подтверждение отправителю
-        socket.emit('private message', { 
-            fromId: socket.id, 
-            fromName: socket.nickname, 
-            text: data.text, 
-            isSelf: true 
+        // Отображение у себя
+        socket.emit('private message', {
+            fromId: socket.id,
+            text: data.text,
+            isSelf: true
         });
     });
 
     socket.on('disconnect', () => {
-        delete users[socket.id];
-        io.emit('user list', users);
+        delete onlineUsers[socket.id];
+        io.emit('user list', onlineUsers);
     });
 });
 
 const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => console.log('Server is running on port ' + PORT));
+http.listen(PORT, () => console.log('Moon Server Active'));
