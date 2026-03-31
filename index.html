@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Messenger | Pro</title>
+    <title>Moon Messenger Pro</title>
     <style>
         :root { --bg: #0b1118; --acc: #38bdf8; --glass: rgba(255, 255, 255, 0.03); --blur: blur(20px); --panel: rgba(23, 33, 43, 0.8); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -37,6 +37,10 @@
         .del-msg { font-size: 10px; color: #ff4d4d; cursor: pointer; display: none; margin-top: 5px; }
         .me:hover .del-msg { display: block; }
 
+        /* ПОИСК */
+        #search-box { padding: 10px 15px; }
+        #search-box input { margin: 0; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px; }
+
         @media (max-width: 600px) {
             #sidebar { width: 100%; }
             #sidebar.hide { display: none; }
@@ -49,8 +53,7 @@
 
 <div id="intro">
     <div class="slide active" id="s1"><div class="icon">🛰️</div><h2>Moon Messenger</h2><p>Будущее связи</p></div>
-    <div class="slide" id="s2"><div class="icon">💎</div><h2>Glass UI</h2><p>Чистый стиль</p></div>
-    <div class="slide" id="s3"><div class="icon">🌕</div><h2>Поехали</h2></div>
+    <div class="slide" id="s2"><div class="icon">🌕</div><h2>Загрузка...</h2></div>
 </div>
 
 <div id="auth-screen">
@@ -64,7 +67,8 @@
 </div>
 
 <div id="sidebar">
-    <div style="padding:15px; font-weight:bold; color:var(--acc);">MOON CHATS</div>
+    <div style="padding:15px; font-weight:bold; color:var(--acc); font-size: 20px;">MOON</div>
+    <div id="search-box"><input id="search-in" placeholder="Найти контакт..." oninput="draw()"></div>
     <div id="u-list" style="overflow-y:auto; flex:1;"></div>
 </div>
 
@@ -79,7 +83,7 @@
     <div style="padding:15px; background:var(--panel); display:flex; align-items:center; gap:10px;">
         <label for="f-in" style="cursor:pointer; font-size:22px;">📎</label>
         <input type="file" id="f-in" style="display:none" onchange="upF(this)">
-        <input id="m" placeholder="Сообщение..." style="margin:0; border-radius:20px;">
+        <input id="m" placeholder="Написать..." style="margin:0; border-radius:20px;">
         <button onclick="send()" style="background:none; border:none; color:var(--acc); font-size:24px;">➤</button>
     </div>
 </div>
@@ -90,13 +94,13 @@
     let isReg = false, myName = localStorage.getItem('m_user') || "", tId = "", online = {};
     let history = JSON.parse(localStorage.getItem('m_hist') || '{}');
 
-    // АНИМАЦИЯ И СЕССИЯ
+    // АНИМАЦИЯ
     if(!myName) {
         let st = 1;
         const it = setInterval(() => {
             document.getElementById(`s${st}`).classList.remove('active');
             st++;
-            if(st > 3) {
+            if(st > 2) {
                 clearInterval(it);
                 document.getElementById('intro').style.opacity = '0';
                 setTimeout(() => { document.getElementById('intro').remove(); document.getElementById('auth-screen').style.display = 'flex'; }, 800);
@@ -124,11 +128,20 @@
     }
 
     function draw() {
+        const q = document.getElementById('search-in').value.toLowerCase();
         const l = document.getElementById('u-list'); l.innerHTML = '';
-        addU('saved_messages', '⭐ Избранное', true);
-        addU('group_global', '🌍 Общий чат', true);
+        
+        const staticItems = [
+            {id: 'saved_messages', name: '⭐ Избранное', sp: true},
+            {id: 'group_global', name: '🌍 Общий чат', sp: true}
+        ];
+
+        staticItems.forEach(item => {
+            if(item.name.toLowerCase().includes(q)) addU(item.id, item.name, item.sp);
+        });
+
         Object.keys(online).forEach(id => {
-            if(online[id] !== myName) addU(id, online[id]);
+            if(online[id] !== myName && online[id].toLowerCase().includes(q)) addU(id, online[id]);
         });
     }
 
@@ -137,7 +150,8 @@
         d.innerHTML = `<div class="avatar" style="${sp?'background:#facc15':''}">${name[0]}</div><b>${name}</b>`;
         d.onclick = () => {
             if(tId === id && document.getElementById('chat').classList.contains('active')) return;
-            tId = id; document.getElementById('c-name').innerText = name;
+            tId = id; 
+            document.getElementById('c-name').innerText = name;
             document.getElementById('msgs').innerHTML = '';
             document.getElementById('chat').classList.add('active');
             document.getElementById('sidebar').classList.add('hide');
@@ -147,16 +161,6 @@
             if(history[key]) history[key].forEach(m => render(m));
         };
         document.getElementById('u-list').appendChild(d);
-    }
-
-    function upF(el) {
-        const f = el.files[0]; if(!f || !tId) return;
-        const r = new FileReader();
-        r.onload = e => {
-            const type = f.type.split('/')[0];
-            socket.emit('private message', { toId: tId, text: f.name, fileData: e.target.result, fileType: type });
-        };
-        r.readAsDataURL(f);
     }
 
     function send() {
@@ -174,21 +178,19 @@
     socket.on('private message', d => {
         const key = d.toId === 'group_global' ? 'group_global' : (d.isSelf ? (online[d.toId] || d.toId) : d.fromName);
         saveM(key, d);
-        if(tId === d.fromId || tId === d.toId || (tId === 'group_global' && d.toId === 'group_global')) render(d);
-    });
-
-    socket.on('delete message', d => {
-        const el = document.querySelector(`[data-id="${d.msgId}"]`);
-        if(el) el.innerHTML = '<i style="opacity:0.4">Удалено у всех</i>';
-        Object.keys(history).forEach(k => history[k] = history[k].filter(m => m.msgId != d.msgId));
-        localStorage.setItem('m_hist', JSON.stringify(history));
+        // Рисуем сообщение, если чат с этим человеком сейчас открыт
+        const currentPartner = (online[tId] || tId);
+        if(key === currentPartner || tId === 'group_global' && d.toId === 'group_global') render(d);
     });
 
     function saveM(k, d) {
         if(!history[k]) history[k] = [];
-        history[k].push(d);
-        if(history[k].length > 100) history[k].shift();
-        localStorage.setItem('m_hist', JSON.stringify(history));
+        // Проверка на дубликаты
+        if(!history[k].some(m => m.msgId === d.msgId)) {
+            history[k].push(d);
+            if(history[k].length > 100) history[k].shift();
+            localStorage.setItem('m_hist', JSON.stringify(history));
+        }
     }
 
     function render(d) {
@@ -201,8 +203,7 @@
             else if(d.fileType === 'video') c = `<video src="${d.fileData}" controls></video>`;
             else c = `<a href="${d.fileData}" download="${d.text}" style="color:white">📄 ${d.text}</a>`;
         }
-        m.innerHTML = `<small style="display:block;font-size:10px;opacity:0.5">${d.fromName || 'Я'}</small>${c}
-                       ${d.isSelf ? `<div class="del-msg" onclick="socket.emit('delete message',{msgId:${d.msgId}})">Удалить у всех</div>`:''}`;
+        m.innerHTML = `<small style="display:block;font-size:10px;opacity:0.5">${d.fromName || 'Я'}</small>${c}`;
         document.getElementById('msgs').appendChild(m);
         document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
     }
