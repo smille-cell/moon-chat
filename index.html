@@ -9,176 +9,121 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100dvh; display: flex; overflow: hidden; }
 
-        /* АНИМАЦИЯ ПРИВЕТСТВИЯ */
+        /* ИНТРО */
         #intro-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.8s ease; }
         .intro-slide { display: none; text-align: center; animation: fadeIn 1s; }
         .intro-slide.active { display: block; }
         .intro-icon { font-size: 60px; margin-bottom: 20px; filter: drop-shadow(0 0 10px var(--accent)); }
         .intro-title { color: var(--accent); font-size: 24px; margin-bottom: 10px; font-weight: bold; }
-        .intro-text { opacity: 0.7; font-size: 16px; max-width: 280px; line-height: 1.5; }
-        
-        .intro-dots { display: flex; gap: 8px; margin-top: 40px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: #334155; transition: 0.3s; }
-        .dot.active { background: var(--accent); transform: scale(1.3); }
         
         #start-btn { margin-top: 30px; padding: 12px 40px; border-radius: 25px; border: none; background: var(--accent); color: #000; font-weight: bold; cursor: pointer; display: none; }
-
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ОСТАЛЬНОЙ ИНТЕРФЕЙС (как в ТГ версии) */
+        /* ВХОД */
         #auth-screen { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; align-items: center; justify-content: center; }
         .auth-box { background: #1e293b; padding: 30px; border-radius: 25px; width: 320px; text-align: center; border: 1px solid var(--accent); }
         input { background: #0f172a; border: 1px solid #334155; color: #fff; padding: 14px; border-radius: 12px; width: 100%; margin-bottom: 10px; outline: none; }
         button { background: var(--accent); color: #000; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
 
-        #sidebar { width: 300px; border-right: 1px solid var(--glass); display: flex; flex-direction: column; background: #0f172a; flex-shrink: 0; }
-        .search-area { padding: 15px; border-bottom: 1px solid var(--glass); }
-        #user-list { flex: 1; overflow-y: auto; }
-        .contact { padding: 15px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .contact.active { background: rgba(56, 189, 248, 0.1); border-left: 3px solid var(--accent); }
-
-        #chat-main { flex: 1; display: flex; flex-direction: column; background: #0b0e14; position: relative; }
+        /* ЧАТ */
+        #sidebar { width: 300px; border-right: 1px solid var(--glass); display: none; flex-direction: column; background: #0f172a; }
+        #chat-main { flex: 1; display: none; flex-direction: column; background: #0b0e14; position: relative; }
         #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; list-style: none; margin: 0; }
-        .msg { padding: 10px 14px; border-radius: 15px; max-width: 75%; font-size: 15px; }
+        .msg { padding: 10px 14px; border-radius: 15px; max-width: 75%; }
         .msg.me { align-self: flex-end; background: #0369a1; }
         .msg.other { align-self: flex-start; background: #334155; }
-        
-        .input-area { padding: 15px; display: none; gap: 10px; background: #1e293b; }
-
-        @media (max-width: 600px) {
-            #sidebar { width: 100%; }
-            #chat-main { display: none; position: fixed; inset: 0; z-index: 100; }
-            #chat-main.open { display: flex; }
-        }
+        .input-area { padding: 15px; display: flex; gap: 10px; background: #1e293b; }
     </style>
 </head>
 <body>
 
 <div id="intro-overlay">
-    <div class="intro-slide active" id="slide1">
-        <div class="intro-icon">🛡️</div>
-        <div class="intro-title">Конфиденциальность</div>
-        <div class="intro-text">Ваши сообщения доступны только вам и вашему собеседнику.</div>
-    </div>
-    <div class="intro-slide" id="slide2">
-        <div class="intro-icon">🔐</div>
-        <div class="intro-title">Moon Shield</div>
-        <div class="intro-text">Защита от перехвата данных на всех этапах передачи.</div>
-    </div>
-    <div class="intro-slide" id="slide3">
-        <div class="intro-icon">🌕</div>
-        <div class="intro-title">Moon Messenger</div>
-        <div class="intro-text">Добро пожаловать в будущее быстрых и приватных диалогов.</div>
-    </div>
-    
-    <div class="intro-dots">
-        <div class="dot active" id="dot1"></div>
-        <div class="dot" id="dot2"></div>
-        <div class="dot" id="dot3"></div>
-    </div>
+    <div class="intro-slide active" id="slide1"><div class="intro-icon">🛡️</div><div class="intro-title">Конфиденциальность</div></div>
+    <div class="intro-slide" id="slide2"><div class="intro-icon">🔐</div><div class="intro-title">Moon Shield</div></div>
+    <div class="intro-slide" id="slide3"><div class="intro-icon">🌕</div><div class="intro-title">Moon Messenger</div></div>
     <button id="start-btn" onclick="goToAuth()">НАЧАТЬ</button>
 </div>
 
 <div id="auth-screen">
     <div class="auth-box">
-        <h2 style="color: var(--accent)">ВХОД</h2>
+        <h2 id="atitle" style="color: var(--accent)">ВХОД</h2>
         <input id="u" placeholder="Логин">
         <input id="p" type="password" placeholder="Пароль">
-        <button onclick="auth(true)">РЕГИСТРАЦИЯ</button>
-        <p onclick="auth(false)" style="font-size:12px; color:var(--accent); cursor:pointer; margin-top:15px;">Войти в аккаунт</p>
+        <button id="abtn" onclick="sendAuth()">ВОЙТИ</button>
+        <p id="amode" onclick="switchMode()" style="font-size:12px; color:var(--accent); cursor:pointer; margin-top:15px;">Нет аккаунта? Регистрация</p>
     </div>
 </div>
 
 <div id="sidebar">
-    <div class="search-area"><input id="search" placeholder="Поиск..." oninput="drawUsers()"></div>
+    <div style="padding:15px; border-bottom:1px solid var(--glass)">Онлайн</div>
     <div id="user-list"></div>
 </div>
 <div id="chat-main">
-    <div id="chat-header" style="padding:15px; background:#1e293b; display:none;">
-        <span onclick="closeChat()" style="cursor:pointer; margin-right:15px; display:none;" id="back-btn">←</span>
-        <span id="chat-with-name"></span>
-    </div>
+    <div id="chat-header" style="padding:15px; background:#1e293b;"><span id="chat-with">Выберите чат</span></div>
     <ul id="messages"></ul>
-    <div class="input-area" id="input-zone">
-        <input id="m" placeholder="Сообщение..." autocomplete="off">
-        <button onclick="send()" style="width: 50px;">➤</button>
-    </div>
+    <div class="input-area"><input id="m" placeholder="Сообщение..."><button onclick="send()">➤</button></div>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    // ЛОГИКА ИНТРО
-    let currentSlide = 1;
-    const interval = setInterval(() => {
-        document.getElementById(`slide${currentSlide}`).classList.remove('active');
-        document.getElementById(`dot${currentSlide}`).classList.remove('active');
-        currentSlide++;
-        if(currentSlide > 3) {
-            clearInterval(interval);
-            document.getElementById('slide3').classList.add('active');
-            document.getElementById('dot3').classList.add('active');
-            document.getElementById('start-btn').style.display = 'block';
-        } else {
-            document.getElementById(`slide${currentSlide}`).classList.add('active');
-            document.getElementById(`dot${currentSlide}`).classList.add('active');
-        }
-    }, 2500);
-
-    function goToAuth() {
-        document.getElementById('intro-overlay').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('intro-overlay').remove();
-            document.getElementById('auth-screen').style.display = 'flex';
-        }, 800);
-    }
-
-    // ЛОГИКА ЧАТА (как в прошлой версии)
     const socket = io();
-    let myName = "", targetId = "", users = {};
+    let isReg = false;
+    let myName = "", targetId = "";
 
-    function auth(reg) {
+    // Слайды
+    let curS = 1;
+    const sInt = setInterval(() => {
+        document.getElementById(`slide${curS}`).classList.remove('active');
+        curS++;
+        if(curS > 3) { clearInterval(sInt); document.getElementById('slide3').classList.add('active'); document.getElementById('start-btn').style.display='block'; }
+        else document.getElementById(`slide${curS}`).classList.add('active');
+    }, 2000);
+
+    function goToAuth() { document.getElementById('intro-overlay').remove(); document.getElementById('auth-screen').style.display='flex'; }
+    
+    function switchMode() {
+        isReg = !isReg;
+        document.getElementById('atitle').innerText = isReg ? "РЕГИСТРАЦИЯ" : "ВХОД";
+        document.getElementById('abtn').innerText = isReg ? "СОЗДАТЬ" : "ВОЙТИ";
+        document.getElementById('amode').innerText = isReg ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Регистрация";
+    }
+
+    function sendAuth() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
-        if(u && p) socket.emit('auth', { username: u, password: p, isReg: reg });
+        if(u && p) socket.emit('auth', { username: u, password: p, isReg: isReg });
     }
-    socket.on('auth success', n => { myName = n; document.getElementById('auth-screen').remove(); socket.emit('set nickname', myName); });
+
+    socket.on('auth success', n => {
+        myName = n;
+        document.getElementById('auth-screen').remove();
+        document.getElementById('sidebar').style.display = 'flex';
+        document.getElementById('chat-main').style.display = 'flex';
+        socket.emit('set nickname', myName);
+    });
+
     socket.on('auth error', m => alert(m));
-    socket.on('user list', u => { users = u; drawUsers(); });
 
-    function drawUsers() {
-        const list = document.getElementById('user-list'), q = document.getElementById('search').value.toLowerCase();
-        list.innerHTML = '';
-        for(let id in users) {
-            if(users[id] !== myName && users[id].toLowerCase().includes(q)) {
-                const d = document.createElement('div');
-                d.className = `contact ${id === targetId ? 'active' : ''}`;
-                d.innerHTML = `<b>${users[id]}</b>`;
-                d.onclick = () => openChat(id, users[id]);
-                list.appendChild(d);
-            }
+    socket.on('user list', u => {
+        const list = document.getElementById('user-list'); list.innerHTML = '';
+        for(let id in u) if(u[id] !== myName) {
+            const d = document.createElement('div');
+            d.style.padding = '15px'; d.style.cursor = 'pointer'; d.innerText = u[id];
+            d.onclick = () => { targetId = id; document.getElementById('chat-with').innerText = u[id]; document.getElementById('messages').innerHTML = ''; };
+            list.appendChild(d);
         }
-    }
+    });
 
-    function openChat(id, name) {
-        targetId = id;
-        document.getElementById('chat-header').style.display = 'block';
-        document.getElementById('input-zone').style.display = 'flex';
-        document.getElementById('chat-with-name').innerText = name;
-        document.getElementById('messages').innerHTML = '';
-        if(window.innerWidth < 600) document.getElementById('chat-main').classList.add('open');
-        drawUsers();
-    }
-    function closeChat() { document.getElementById('chat-main').classList.remove('open'); }
     function send() {
         const i = document.getElementById('m');
         if(i.value && targetId) { socket.emit('private message', { toId: targetId, text: i.value }); i.value = ''; }
     }
+
     socket.on('private message', d => {
         if(d.fromId === targetId || d.isSelf) {
             const li = document.createElement('li');
             li.className = `msg ${d.isSelf ? 'me' : 'other'}`;
             li.innerText = d.text;
             document.getElementById('messages').appendChild(li);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         }
     });
 </script>
