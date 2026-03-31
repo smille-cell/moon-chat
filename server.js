@@ -2,48 +2,47 @@ const express = require('express');
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
-const path = require('path');
 
-// Хранилище данных (в памяти сервера)
-const usersDB = {};    // База: { "логин": "пароль" }
-const onlineUsers = {}; // Мапа: { "socket.id": "имя_пользователя" }
+// Наша временная база данных (очищается при перезагрузке сервера на Render)
+const usersDB = {}; 
+const onlineUsers = {}; // socket.id -> username
 
 app.use(express.static(__dirname));
 
 io.on('connection', (socket) => {
-    console.log('Новое подключение:', socket.id);
+    console.log('Подключился новый исследователь Луны:', socket.id);
 
-    // 1. Обработка Входа и Регистрации
+    // Логика Авторизации (Вход или Регистрация)
     socket.on('auth', (data) => {
         const { username, password, isReg } = data;
-        
+
         if (isReg) {
-            // Регистрация
+            // Регистрация нового аккаунта
             if (usersDB[username]) {
-                return socket.emit('auth error', 'Этот позывной уже занят в системе Moon.');
+                return socket.emit('auth error', 'Этот позывной уже занят!');
             }
             usersDB[username] = password;
-            console.log(`Зарегистрирован новый юзер: ${username}`);
+            console.log(`Новый пользователь зарегистрирован: ${username}`);
             socket.emit('auth success', username);
         } else {
-            // Вход
+            // Попытка входа
             if (usersDB[username] === password) {
                 socket.emit('auth success', username);
             } else {
-                socket.emit('auth error', 'Доступ запрещен. Неверный пароль.');
+                socket.emit('auth error', 'Ошибка доступа: проверьте логин или пароль');
             }
         }
     });
 
-    // 2. Установка ника и рассылка списка онлайн-юзеров
+    // Установка ника после успешного входа
     socket.on('set nickname', (name) => {
         socket.nickname = name;
         onlineUsers[socket.id] = name;
-        // Отправляем всем обновленный список контактов
+        // Рассылаем всем обновленный список пользователей для поиска
         io.emit('user list', onlineUsers);
     });
 
-    // 3. ПРИВАТНЫЕ СООБЩЕНИЯ (Логика ТГ)
+    // Приватные сообщения (как в Telegram)
     socket.on('private message', (data) => {
         const { toId, text } = data;
         
@@ -55,8 +54,7 @@ io.on('connection', (socket) => {
                 text: text,
                 isSelf: false
             });
-            
-            // Отправляем самому себе (чтобы отобразилось в окне чата)
+            // Показываем самому себе
             socket.emit('private message', {
                 fromId: socket.id,
                 fromName: socket.nickname,
@@ -66,16 +64,14 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 4. Отключение
     socket.on('disconnect', () => {
-        console.log('Юзер отключился:', socket.nickname);
+        console.log('Пользователь покинул орбиту:', socket.nickname);
         delete onlineUsers[socket.id];
         io.emit('user list', onlineUsers);
     });
 });
 
-// Запуск сервера
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
-    console.log(`Moon Server запущен на порту ${PORT}`);
-})
+    console.log(`Moon Server активен на порту: ${PORT}`);
+});
