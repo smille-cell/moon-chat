@@ -3,47 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Messenger | Premium Pro</title>
+    <title>Moon Messenger</title>
     <style>
         :root { --bg: #0b1118; --acc: #38bdf8; --glass: rgba(255, 255, 255, 0.03); --blur: blur(25px); --panel: rgba(23, 33, 43, 0.8); }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; height: 100dvh; display: flex; overflow: hidden; }
+        body { background: var(--bg); color: #fff; font-family: -apple-system, sans-serif; margin: 0; height: 100dvh; display: flex; overflow: hidden; }
 
-        /* АНИМАЦИЯ ИНТРО */
-        #intro { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 1s ease-in-out; }
-        .intro-logo { text-align: center; animation: zoomPulse 2s infinite; }
-        @keyframes zoomPulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+        /* АНИМАЦИЯ НАЧАЛА */
+        #intro { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 1s ease; }
+        .logo-ani { text-align: center; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.5; } }
 
-        /* ПРОФИЛЬ (ВЫДВИЖНОЕ МЕНЮ) */
-        #profile-drawer { position: fixed; left: -320px; top: 0; bottom: 0; width: 300px; background: var(--panel); backdrop-filter: var(--blur); z-index: 5000; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-right: 1px solid rgba(255,255,255,0.1); padding: 50px 20px; display: flex; flex-direction: column; align-items: center; }
-        #profile-drawer.open { left: 0; box-shadow: 20px 0 80px rgba(0,0,0,0.8); }
-        .p-ava { width: 110px; height: 110px; border-radius: 50%; border: 3px solid var(--acc); object-fit: cover; margin-bottom: 15px; cursor: pointer; transition: 0.3s; }
-        .p-ava:hover { filter: brightness(1.2); transform: scale(1.05); }
-        .logout-btn { margin-top: auto; color: #ff4d4d; border: 1px solid #ff4d4d; padding: 12px; border-radius: 12px; cursor: pointer; background: none; width: 100%; font-weight: bold; }
+        /* ИНТЕРФЕЙС */
+        #profile-drawer { position: fixed; left: -310px; top: 0; bottom: 0; width: 280px; background: var(--panel); backdrop-filter: var(--blur); z-index: 5000; transition: 0.4s; border-right: 1px solid rgba(255,255,255,0.1); padding: 40px 20px; display: flex; flex-direction: column; align-items: center; }
+        #profile-drawer.open { left: 0; }
+        .p-ava { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--acc); object-fit: cover; cursor: pointer; }
+        
+        #auth-screen { position: fixed; inset: 0; background: #0b1118; z-index: 4000; display: none; align-items: center; justify-content: center; }
+        .glass { background: var(--glass); backdrop-filter: var(--blur); padding: 30px; border-radius: 25px; width: 90%; max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 12px; width: 100%; margin-bottom: 10px; }
+        .btn { background: var(--acc); color: #000; border: none; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
 
-        /* ЭКРАН ВХОДА */
-        #auth-screen { position: fixed; inset: 0; background: radial-gradient(circle at top, #1e293b, #0b1118); z-index: 4000; display: none; align-items: center; justify-content: center; }
-        .glass-card { background: var(--glass); backdrop-filter: var(--blur); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 350px; text-align: center; }
-        input { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 15px; border-radius: 15px; width: 100%; margin-bottom: 12px; font-size: 16px; }
-        .btn-p { background: var(--acc); color: #000; border: none; padding: 16px; border-radius: 15px; font-weight: 800; width: 100%; cursor: pointer; }
-
-        /* САЙДБАР И СПИСОК ЧАТОВ */
         #sidebar { width: 320px; background: var(--panel); backdrop-filter: var(--blur); border-right: 1px solid rgba(255,255,255,0.05); display: none; flex-direction: column; }
-        .header { padding: 20px; display: flex; align-items: center; gap: 15px; }
-        .contact { padding: 15px; display: flex; align-items: center; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02); transition: 0.2s; }
+        .contact { padding: 15px; display: flex; align-items: center; cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02); }
         .contact:hover { background: rgba(255,255,255,0.05); }
-        .avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 12px; object-fit: cover; background: var(--acc); display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; flex-shrink: 0; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; margin-right: 12px; object-fit: cover; }
 
-        /* ОКНО ЧАТА */
         #chat { flex: 1; display: none; flex-direction: column; background: #0e1621; }
-        #msgs { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .m { padding: 12px 16px; border-radius: 18px; max-width: 80%; font-size: 15px; position: relative; animation: fadeIn 0.3s ease; line-height: 1.4; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .me { align-self: flex-end; background: #2b5278; border-bottom-right-radius: 4px; }
-        .ot { align-self: flex-start; background: #182533; border-bottom-left-radius: 4px; }
-        .m img { max-width: 100%; border-radius: 10px; margin-top: 5px; }
-        .del-msg { font-size: 10px; color: #ff4d4d; cursor: pointer; margin-top: 5px; opacity: 0.7; display: none; }
-        .me:hover .del-msg { display: block; }
+        #msgs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .m { padding: 10px 14px; border-radius: 15px; max-width: 80%; font-size: 14px; position: relative; }
+        .me { align-self: flex-end; background: #2b5278; }
+        .ot { align-self: flex-start; background: #182533; }
 
         @media (max-width: 600px) {
             #sidebar { width: 100%; }
@@ -55,59 +46,50 @@
 </head>
 <body>
 
-<div id="profile-drawer">
-    <input type="file" id="ava-up" hidden onchange="changeAva(this)" accept="image/*">
-    <img id="my-ava" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="p-ava" onclick="document.getElementById('ava-up').click()">
-    <h3 id="my-name" style="margin: 10px 0;">User</h3>
-    <p style="color: var(--acc); font-size: 12px; margin-bottom: 30px;">Moon Messenger Pro</p>
-    
-    <div style="width: 100%; background: rgba(255,255,255,0.03); border-radius: 15px; padding: 10px;">
-        <div style="padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">Настройки приватности</div>
-        <div style="padding: 12px;">Очистить кеш сообщений</div>
+<div id="intro">
+    <div class="logo-ani">
+        <div style="font-size: 70px;">🌕</div>
+        <h2 style="letter-spacing: 5px;">MOON</h2>
     </div>
-
-    <button class="logout-btn" onclick="logout()">ВЫЙТИ ИЗ АККАУНТА</button>
 </div>
 
-<div id="intro">
-    <div class="intro-logo">
-        <div style="font-size: 80px;">🌕</div>
-        <h1 style="letter-spacing: 8px; margin: 10px 0;">MOON</h1>
-    </div>
+<div id="profile-drawer">
+    <input type="file" id="ava-up" hidden onchange="changeAva(this)">
+    <img id="my-ava" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="p-ava" onclick="document.getElementById('ava-up').click()">
+    <h3 id="my-name">User</h3>
+    <button onclick="localStorage.clear(); location.reload()" style="margin-top:auto; color:red; background:none; border:none; cursor:pointer;">Выйти</button>
 </div>
 
 <div id="auth-screen">
-    <div class="glass-card">
-        <h2 id="at">Вход в Moon</h2>
+    <div class="glass">
+        <h2 id="at">Moon Login</h2>
         <input id="u" placeholder="Логин">
         <input id="p" type="password" placeholder="Пароль">
-        <button class="btn-p" onclick="auth()">ВОЙТИ</button>
-        <p onclick="sw()" id="as" style="font-size:12px; color:var(--acc); cursor:pointer; margin-top:15px;">Создать новый аккаунт</p>
+        <button class="btn" onclick="auth()">ВОЙТИ</button>
+        <p onclick="isReg=!isReg; document.getElementById('at').innerText=isReg?'Регистрация':'Вход'" style="cursor:pointer; font-size:12px; color:var(--acc); margin-top:10px;">Создать аккаунт</p>
     </div>
 </div>
 
 <div id="sidebar">
-    <div class="header">
-        <div onclick="toggleProfile()" style="font-size: 24px; cursor: pointer; color: var(--acc);">☰</div>
-        <div style="font-weight: 800; font-size: 22px; letter-spacing: 1px;">MOON</div>
+    <div style="padding: 20px; display: flex; align-items: center; gap: 15px;">
+        <div onclick="document.getElementById('profile-drawer').classList.toggle('open')" style="cursor:pointer; color:var(--acc); font-size:20px;">☰</div>
+        <b>MOON</b>
     </div>
-    <div style="padding: 0 15px 15px 15px;">
-        <input id="search" placeholder="Поиск (RU/EN)..." oninput="draw()" style="margin:0; background: rgba(255,255,255,0.05); border-radius: 12px;">
+    <div style="padding: 0 15px 10px;">
+        <input id="search" placeholder="Ник собеседника..." oninput="draw()" style="margin:0;">
     </div>
     <div id="u-list" style="overflow-y:auto; flex:1;"></div>
 </div>
 
 <div id="chat">
-    <div style="padding:15px; background:var(--panel); display:flex; align-items:center; border-bottom: 1px solid rgba(255,255,255,0.05);">
-        <button onclick="closeC()" id="back-btn" style="display:none; background:none; border:none; color:var(--acc); font-size:24px; margin-right:15px;">←</button>
-        <b id="c-name" style="font-size: 18px;">Чат</b>
+    <div style="padding:15px; background:var(--panel); display:flex; align-items:center;">
+        <button onclick="closeC()" style="background:none; border:none; color:var(--acc); font-size:20px; margin-right:10px;">←</button>
+        <b id="c-name">Чат</b>
     </div>
     <div id="msgs"></div>
-    <div style="padding:15px; background:var(--panel); display:flex; align-items:center; gap:12px;">
-        <label for="f-in" style="cursor:pointer; font-size:24px; opacity:0.6;">📎</label>
-        <input type="file" id="f-in" style="display:none" onchange="upF(this)">
-        <input id="m" placeholder="Напишите сообщение..." style="margin:0; border-radius:25px; border:none; background: rgba(0,0,0,0.25);">
-        <button onclick="send()" style="background:none; border:none; color:var(--acc); font-size:28px;">➤</button>
+    <div style="padding:15px; background:var(--panel); display:flex; gap:10px;">
+        <input id="m" placeholder="Сообщение..." style="margin:0; border-radius:20px;">
+        <button onclick="send()" style="background:none; border:none; color:var(--acc); font-size:25px;">➤</button>
     </div>
 </div>
 
@@ -115,10 +97,10 @@
 <script>
     const socket = io();
     let isReg = false, myName = localStorage.getItem('m_user') || "", tId = "", online = {};
+    let myContacts = JSON.parse(localStorage.getItem('m_contacts') || '[]');
     let history = JSON.parse(localStorage.getItem('m_hist') || '{}');
     let myAva = localStorage.getItem('m_ava') || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-    // Инициализация при загрузке
     window.onload = () => {
         if(myName) {
             setTimeout(() => {
@@ -136,27 +118,10 @@
         }
     };
 
-    function toggleProfile() { document.getElementById('profile-drawer').classList.toggle('open'); }
-    function logout() { localStorage.clear(); location.reload(); }
-
-    function changeAva(el) {
-        const file = el.files[0];
-        const reader = new FileReader();
-        reader.onload = e => {
-            myAva = e.target.result;
-            document.getElementById('my-ava').src = myAva;
-            localStorage.setItem('m_ava', myAva);
-            socket.emit('update avatar', { avatar: myAva });
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function sw() { isReg = !isReg; document.getElementById('at').innerText = isReg ? "Регистрация" : "Вход"; }
     function auth() {
         const u = document.getElementById('u').value, p = document.getElementById('p').value;
         if(u && p) socket.emit('auth', { username: u, password: p, isReg: isReg });
     }
-
     socket.on('auth success', n => { localStorage.setItem('m_user', n); location.reload(); });
     socket.on('auth error', m => alert(m));
     socket.on('user list', u => { online = u; draw(); });
@@ -166,110 +131,111 @@
         if(window.innerWidth > 600) document.getElementById('chat').style.display = 'flex';
     }
 
-    // ПОИСК И ОТРИСОВКА (ИСПРАВЛЕНО)
     function draw() {
         const q = document.getElementById('search').value.toLowerCase().trim();
         const l = document.getElementById('u-list'); l.innerHTML = '';
         
+        // 1. Избранное всегда в топе
         addU('saved_messages', '⭐ Избранное', true);
-        addU('group_global', '🌍 Общий чат', true);
 
-        Object.keys(online).forEach(id => {
-            const userObj = online[id];
-            const userName = userObj.name || "Аноним";
-            const userAva = userObj.avatar || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-            if (userName !== myName && userName.toLowerCase().includes(q)) {
-                addU(id, userName, false, userAva);
+        // 2. Те, с кем уже есть контакт
+        myContacts.forEach(name => {
+            const id = Object.keys(online).find(k => online[k].name === name);
+            if (id && name !== myName && (name.toLowerCase().includes(q) || q === "")) {
+                addU(id, name, false, online[id].avatar);
             }
         });
+
+        // 3. Поиск нового (только если ввели ник)
+        if (q !== "") {
+            Object.keys(online).forEach(id => {
+                const name = online[id].name;
+                if (name !== myName && name.toLowerCase().includes(q) && !myContacts.includes(name)) {
+                    const d = document.createElement('div');
+                    d.className = 'contact';
+                    d.style.borderLeft = '4px solid var(--acc)';
+                    d.innerHTML = `<img src="${online[id].avatar}" class="avatar"><b>${name} <small>(Найти)</small></b>`;
+                    d.onclick = () => { tId = id; openChat(id, name); };
+                    l.appendChild(d);
+                }
+            });
+        }
     }
 
     function addU(id, name, sp = false, ava = "") {
         const d = document.createElement('div');
         d.className = 'contact';
-        const imgHTML = sp ? `<div class="avatar" style="background:#facc15">${name[0]}</div>` : `<img src="${ava}" class="avatar">`;
-        d.innerHTML = `${imgHTML}<b>${name}</b>`;
-        
-        d.onclick = () => {
-            if(tId === id && document.getElementById('chat').classList.contains('active')) return;
-            tId = id; 
-            document.getElementById('c-name').innerText = name;
-            document.getElementById('msgs').innerHTML = '';
-            document.getElementById('chat').classList.add('active');
-            document.getElementById('sidebar').classList.add('hide');
-            if(window.innerWidth < 600) document.getElementById('back-btn').style.display = 'block';
-            
-            const key = sp ? id : name;
-            if(history[key]) history[key].forEach(m => render(m));
-            if(document.getElementById('profile-drawer').classList.contains('open')) toggleProfile();
-        };
+        const img = sp ? `<div class="avatar" style="background:var(--acc); display:flex; align-items:center; justify-content:center; color:#000;">⭐</div>` : `<img src="${ava}" class="avatar">`;
+        d.innerHTML = `${img}<b>${name}</b>`;
+        d.onclick = () => openChat(id, name);
         document.getElementById('u-list').appendChild(d);
+    }
+
+    function openChat(id, name) {
+        tId = id;
+        document.getElementById('c-name').innerText = name;
+        document.getElementById('msgs').innerHTML = '';
+        document.getElementById('chat').classList.add('active');
+        document.getElementById('sidebar').classList.add('hide');
+        if (history[name]) history[name].forEach(m => render(m));
+        document.getElementById('profile-drawer').classList.remove('open');
     }
 
     function send() {
         const i = document.getElementById('m');
         if(!i.value || !tId) return;
+        
         if(tId === 'saved_messages') {
-            const d = { text: i.value, isSelf: true, fromName: 'Я', msgId: Date.now(), time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
+            const d = { text: i.value, isSelf: true, fromName: 'Я', msgId: Date.now() };
             render(d); saveM('saved_messages', d);
         } else {
+            const partnerName = document.getElementById('c-name').innerText;
+            if(!myContacts.includes(partnerName)) {
+                myContacts.push(partnerName);
+                localStorage.setItem('m_contacts', JSON.stringify(myContacts));
+            }
             socket.emit('private message', { toId: tId, text: i.value });
         }
         i.value = '';
     }
 
-    function upF(el) {
-        const f = el.files[0]; if(!f || !tId) return;
-        const r = new FileReader();
-        r.onload = e => {
-            const type = f.type.split('/')[0];
-            socket.emit('private message', { toId: tId, text: f.name, fileData: e.target.result, fileType: type });
-        };
-        r.readAsDataURL(f);
-    }
-
     socket.on('private message', d => {
-        const key = d.toId === 'group_global' ? 'group_global' : (d.isSelf ? (online[d.toId]?.name || d.toId) : d.fromName);
+        if(!d.isSelf && d.fromName && !myContacts.includes(d.fromName)) {
+            myContacts.push(d.fromName);
+            localStorage.setItem('m_contacts', JSON.stringify(myContacts));
+            draw();
+        }
+        const key = d.isSelf ? document.getElementById('c-name').innerText : d.fromName;
         saveM(key, d);
-        const currentPartner = online[tId]?.name || tId;
-        if(key === currentPartner || (tId === 'group_global' && d.toId === 'group_global') || (tId === 'saved_messages' && key === 'saved_messages')) render(d);
-    });
-
-    socket.on('delete message', d => {
-        const el = document.querySelector(`[data-id="${d.msgId}"]`);
-        if(el) el.innerHTML = '<i style="opacity:0.4">Сообщение удалено</i>';
-        Object.keys(history).forEach(k => history[k] = history[k].filter(m => m.msgId != d.msgId));
-        localStorage.setItem('m_hist', JSON.stringify(history));
+        if(key === document.getElementById('c-name').innerText) render(d);
     });
 
     function saveM(k, d) {
         if(!history[k]) history[k] = [];
-        if(!history[k].some(m => m.msgId === d.msgId)) {
-            history[k].push(d);
-            localStorage.setItem('m_hist', JSON.stringify(history));
-        }
+        history[k].push(d);
+        localStorage.setItem('m_hist', JSON.stringify(history));
     }
 
     function render(d) {
         const m = document.createElement('div');
         m.className = `m ${d.isSelf?'me':'ot'}`;
-        m.setAttribute('data-id', d.msgId);
-        let c = d.text;
-        if(d.fileData) {
-            if(d.fileType === 'image') c = `<img src="${d.fileData}" onclick="window.open(this.src)">`;
-            else if(d.fileType === 'video') c = `<video src="${d.fileData}" controls></video>`;
-            else c = `<a href="${d.fileData}" download="${d.text}" style="color:var(--acc)">📄 ${d.text}</a>`;
-        }
-        const time = d.time || "";
-        m.innerHTML = `<small style="display:block;font-size:10px;opacity:0.5;margin-bottom:4px;">${d.fromName || 'Я'}</small>
-                       ${c} <div style="font-size:9px; opacity:0.3; text-align:right;">${time}</div>
-                       ${d.isSelf ? `<div class="del-msg" onclick="socket.emit('delete message',{msgId:${d.msgId}})">Удалить</div>` : ''}`;
+        m.innerHTML = `<small style="display:block; font-size:10px; opacity:0.5;">${d.fromName}</small>${d.text}`;
         document.getElementById('msgs').appendChild(m);
         document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
     }
 
-    function closeC() { tId = ""; document.getElementById('chat').classList.remove('active'); document.getElementById('sidebar').classList.remove('hide'); }
+    function changeAva(el) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            myAva = e.target.result;
+            document.getElementById('my-ava').src = myAva;
+            localStorage.setItem('m_ava', myAva);
+            socket.emit('update avatar', { avatar: myAva });
+        };
+        reader.readAsDataURL(el.files[0]);
+    }
+
+    function closeC() { document.getElementById('chat').classList.remove('active'); document.getElementById('sidebar').classList.remove('hide'); }
 </script>
 </body>
 </html>
